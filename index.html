@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f7f2">
+  <meta name="description" content="Registre e acompanhe o tempo das tarefas domésticas.">
+  <title>Tarefas de casa</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #23332c;
+      background: #f5f7f2;
+      font-synthesis: none;
+      --green: #277453;
+      --green-dark: #1d5e43;
+      --muted: #6d7b73;
+      --border: #e2e9e2;
+      --surface: #fff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    [hidden] { display: none !important; }
+    .container { width: min(100% - 28px, 760px); margin: 0 auto; padding: 28px 0 56px; }
+    header { margin-bottom: 22px; }
+    .eyebrow { margin: 0 0 7px; color: var(--green); font-size: .75rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(1.7rem, 7vw, 2.25rem); letter-spacing: -.04em; }
+    .intro { margin: 8px 0 0; color: var(--muted); line-height: 1.5; }
+    .executor-card, .category, .task-card, .other-task { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; }
+    .executor-card { display: grid; gap: 8px; padding: 16px; margin-bottom: 18px; }
+    label { color: #405248; font-size: .86rem; font-weight: 700; }
+    select, input[type="text"], input[type="number"] {
+      width: 100%; min-height: 46px; border: 1px solid #d5dfd6; border-radius: 10px;
+      background: #fff; padding: 10px 12px; color: inherit; outline: none;
+    }
+    select:focus, input:focus { border-color: var(--green); box-shadow: 0 0 0 3px #27745320; }
+    select.invalid { border-color: #d33f49; animation: flash-border .45s ease-in-out 4; }
+    @keyframes flash-border { 50% { box-shadow: 0 0 0 4px #d33f4930; } }
+    .section-heading { display: flex; justify-content: space-between; align-items: center; margin: 24px 2px 12px; }
+    .section-heading h2 { margin: 0; font-size: 1.05rem; }
+    #status { color: var(--muted); font-size: .84rem; }
+    #categories { display: grid; gap: 12px; }
+    .category { overflow: hidden; }
+    .category-toggle {
+      display: flex; width: 100%; align-items: center; gap: 10px; padding: 17px 16px;
+      border: 0; background: transparent; color: inherit; text-align: left;
+    }
+    .chevron { color: var(--green); font-size: 1rem; transition: transform .18s ease; }
+    .category-toggle[aria-expanded="true"] .chevron { transform: rotate(90deg); }
+    .category-name { flex: 1; font-weight: 800; }
+    .category-average { color: var(--muted); font-size: .82rem; white-space: nowrap; }
+    .category-content { display: grid; gap: 11px; padding: 0 12px 12px; }
+    .task-card, .other-task { padding: 14px; }
+    .task-title { margin: 0 0 10px; font-size: .98rem; }
+    .average { margin: -4px 0 12px; color: var(--muted); font-size: .82rem; }
+    .field { display: grid; gap: 6px; margin-top: 10px; }
+    .controls { display: flex; gap: 9px; margin-top: 12px; }
+    .button {
+      min-height: 44px; padding: 9px 14px; border: 1px solid transparent; border-radius: 10px;
+      font-weight: 750; transition: background .15s, transform .15s;
+    }
+    .button:active { transform: scale(.98); }
+    .button-primary { flex: 1; color: #fff; background: var(--green); }
+    .button-primary:hover { background: var(--green-dark); }
+    .button-secondary { color: #285d46; background: #edf5ef; border-color: #dcebe0; }
+    .time-display { margin: 12px 0 0; color: var(--green-dark); font-size: 1.15rem; font-variant-numeric: tabular-nums; font-weight: 800; }
+    .time-editor { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .time-editor .field { margin-top: 0; }
+    .time-editor input { min-height: 42px; }
+    .other-task { background: #f9fbf8; border-style: dashed; }
+    .other-task h3 { margin: 0 0 8px; font-size: .94rem; }
+    .empty, .message { padding: 18px; border-radius: 12px; background: #fff; color: var(--muted); line-height: 1.5; }
+    .message.error { color: #9c252d; background: #fff2f2; }
+    .toast {
+      position: fixed; z-index: 5; left: 50%; bottom: max(20px, env(safe-area-inset-bottom));
+      width: max-content; max-width: calc(100% - 32px); padding: 12px 16px; border-radius: 12px;
+      color: #fff; background: #263a30; box-shadow: 0 8px 28px #14271d30;
+      opacity: 0; pointer-events: none; transform: translate(-50%, 12px); transition: .2s;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast.error { background: #a92c36; }
+    @media (min-width: 600px) {
+      .container { padding-top: 42px; }
+      .category-content { padding: 0 16px 16px; }
+      .task-card, .other-task { padding: 17px; }
+      .task-card-inner { display: grid; grid-template-columns: 1fr auto; gap: 18px; align-items: end; }
+      .task-card-inner .controls { min-width: 210px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <p class="eyebrow">Rotina da casa</p>
+      <h1>Tarefas de casa</h1>
+      <p class="intro">Acompanhe o tempo e os materiais usados em cada tarefa.</p>
+    </header>
+
+    <section class="executor-card" aria-label="Executor da tarefa">
+      <label for="executor">Executor:</label>
+      <select id="executor">
+        <option value="">Selecione uma pessoa</option>
+        <option value="João Vitor">João Vitor</option>
+        <option value="Taise">Taise</option>
+      </select>
+    </section>
+
+    <div class="section-heading">
+      <h2>Categorias</h2>
+      <span id="status" role="status">Carregando…</span>
+    </div>
+    <section id="categories" aria-label="Categorias de tarefas">
+      <div class="empty">Carregando tarefas…</div>
+    </section>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycby0ckd8sK6GRAB8nNZssZpEReDVJOW3oRv8-qmDltRhYw2sgz0CBUDSxoWZiZmGAMabvA/exec';
+    const STORAGE_PREFIX = 'tarefas-domesticas:timer:';
+    const categoriesElement = document.getElementById('categories');
+    const statusElement = document.getElementById('status');
+    const executorElement = document.getElementById('executor');
+    let taskData = [];
+    let toastTimer;
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, function (character) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character];
+      });
+    }
+
+    function taskKey(category, subcategory) {
+      return STORAGE_PREFIX + encodeURIComponent(category) + ':' + encodeURIComponent(subcategory);
+    }
+
+    function readTimer(key) {
+      try {
+        const value = JSON.parse(localStorage.getItem(key) || 'null');
+        return value && Number.isFinite(value.elapsedMs)
+          ? { elapsedMs: value.elapsedMs, startedAt: value.startedAt || null, wasPaused: Boolean(value.wasPaused) }
+          : { elapsedMs: 0, startedAt: null, wasPaused: false };
+      } catch (error) {
+        console.error('Não foi possível ler o cronômetro salvo.', error);
+        return { elapsedMs: 0, startedAt: null };
+      }
+    }
+
+    function elapsedMilliseconds(timer) {
+      return timer.elapsedMs + (timer.startedAt ? Math.max(0, Date.now() - timer.startedAt) : 0);
+    }
+
+    function formatTime(milliseconds) {
+      const totalSeconds = Math.floor(milliseconds / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+    }
+
+    function displayMinutes(minutes) {
+      return Number(minutes).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' min';
+    }
+
+    function averageFor(rows) {
+      if (!rows.length) return 0;
+      return rows.reduce(function (sum, row) {
+        return sum + (Number(row['cronometro-minutos']) || 0);
+      }, 0) / rows.length;
+    }
+
+    function latestItems(rows) {
+      const latest = rows.slice().sort(function (a, b) {
+        return new Date(b.Carimbo).getTime() - new Date(a.Carimbo).getTime();
+      })[0];
+      return latest ? latest['itens-necessarios'] || '' : '';
+    }
+
+    function makeTaskCard(category, subcategory, rows, isNew) {
+      const key = taskKey(category, subcategory);
+      const timer = readTimer(key);
+      const pausedSeconds = Math.floor(timer.elapsedMs / 1000);
+      const title = isNew ? 'Outra Tarefa' : escapeHtml(subcategory);
+      const avg = isNew ? '' : '<p class="average">Média: ' + displayMinutes(averageFor(rows)) + '</p>';
+      const nameField = isNew
+        ? '<div class="field"><label for="name-' + escapeHtml(key) + '">Nome da tarefa</label><input type="text" data-role="name" id="name-' + escapeHtml(key) + '" placeholder="Ex.: Limpar geladeira" maxlength="160"></div>'
+        : '';
+      return '<article class="' + (isNew ? 'other-task' : 'task-card') + '" data-task-key="' + escapeHtml(key) + '" data-category="' + escapeHtml(category) + '" data-existing-name="' + (isNew ? '' : escapeHtml(subcategory)) + '">' +
+        '<div class="task-card-inner"><div><h3 class="task-title">' + title + '</h3>' + avg + nameField +
+        '<div class="field"><label>Itens necessários</label><input type="text" data-role="items" value="' + escapeHtml(latestItems(rows)) + '" maxlength="500" placeholder="Materiais usados"></div>' +
+        '<div class="time-display" data-role="display">' + formatTime(elapsedMilliseconds(timer)) + '</div>' +
+        '<div class="time-editor" data-role="editor"' + (timer.startedAt || !timer.wasPaused ? ' hidden' : '') + '>' +
+        '<div class="field"><label>Minutos</label><input type="number" data-role="minutes" min="0" step="1" inputmode="numeric" value="' + Math.floor(pausedSeconds / 60) + '"></div>' +
+        '<div class="field"><label>Segundos</label><input type="number" data-role="seconds" min="0" max="59" step="1" inputmode="numeric" value="' + pausedSeconds % 60 + '"></div></div></div>' +
+        '<div class="controls"><button type="button" class="button button-secondary" data-action="timer">' + (timer.startedAt ? 'Pausar' : timer.wasPaused ? 'Continuar' : 'Start') + '</button>' +
+        '<button type="button" class="button button-primary" data-action="save">Salvar</button></div></div></article>';
+    }
+
+    function renderCategories(data) {
+      const grouped = new Map();
+      data.forEach(function (row) {
+        const category = String(row['nome-categoria'] || '').trim();
+        const subcategory = String(row['nome-subcategoria'] || '').trim();
+        if (!category || !subcategory) return;
+        if (!grouped.has(category)) grouped.set(category, new Map());
+        const tasks = grouped.get(category);
+        if (!tasks.has(subcategory)) tasks.set(subcategory, []);
+        tasks.get(subcategory).push(row);
+      });
+
+      if (!grouped.size) {
+        categoriesElement.innerHTML = '<div class="empty">Ainda não há tarefas no histórico. Use "Outra Tarefa" quando uma categoria estiver disponível.</div>';
+        return;
+      }
+
+      categoriesElement.innerHTML = Array.from(grouped.entries()).map(function (entry, index) {
+        const category = entry[0];
+        const tasks = entry[1];
+        const combinedAverage = Array.from(tasks.values()).reduce(function (sum, rows) {
+          return sum + averageFor(rows);
+        }, 0);
+        const id = 'category-content-' + index;
+        const taskCards = Array.from(tasks.entries()).map(function (task) {
+          return makeTaskCard(category, task[0], task[1], false);
+        }).join('');
+        return '<section class="category"><button type="button" class="category-toggle" aria-expanded="false" aria-controls="' + id + '">' +
+          '<span class="chevron" aria-hidden="true">›</span><span class="category-name">' + escapeHtml(category) + '</span>' +
+          '<span class="category-average">Total médio: ' + displayMinutes(combinedAverage) + '</span></button>' +
+          '<div class="category-content" id="' + id + '" hidden>' + taskCards + makeTaskCard(category, '', [], true) + '</div></section>';
+      }).join('');
+    }
+
+    function showToast(message, isError, duration) {
+      const toast = document.getElementById('toast');
+      window.clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.classList.toggle('error', Boolean(isError));
+      toast.classList.add('show');
+      toastTimer = window.setTimeout(function () { toast.classList.remove('show'); }, duration);
+    }
+
+    function requireExecutor() {
+      if (executorElement.value) return true;
+      const duration = 1800;
+      executorElement.classList.add('invalid');
+      showToast('Selecione uma pessoa antes de salvar.', true, duration);
+      window.setTimeout(function () { executorElement.classList.remove('invalid'); }, duration);
+      executorElement.focus();
+      return false;
+    }
+
+    function setTimerInputs(card, milliseconds) {
+      const totalSeconds = Math.floor(milliseconds / 1000);
+      card.querySelector('[data-role="minutes"]').value = String(Math.floor(totalSeconds / 60));
+      card.querySelector('[data-role="seconds"]').value = String(totalSeconds % 60);
+    }
+
+    function toggleTimer(card) {
+      const key = card.dataset.taskKey;
+      const timer = readTimer(key);
+      if (timer.startedAt) {
+        timer.elapsedMs = elapsedMilliseconds(timer);
+        timer.startedAt = null;
+        timer.wasPaused = true;
+        localStorage.setItem(key, JSON.stringify(timer));
+        setTimerInputs(card, timer.elapsedMs);
+        card.querySelector('[data-role="editor"]').hidden = false;
+        card.querySelector('[data-action="timer"]').textContent = 'Continuar';
+      } else {
+        const minuteInput = card.querySelector('[data-role="minutes"]');
+        const secondInput = card.querySelector('[data-role="seconds"]');
+        if (!card.querySelector('[data-role="editor"]').hidden) {
+          const minutes = Math.max(0, Number(minuteInput.value) || 0);
+          const seconds = Math.min(59, Math.max(0, Number(secondInput.value) || 0));
+          timer.elapsedMs = (minutes * 60 + seconds) * 1000;
+        }
+        timer.startedAt = Date.now();
+        timer.wasPaused = false;
+        localStorage.setItem(key, JSON.stringify(timer));
+        card.querySelector('[data-role="editor"]').hidden = true;
+        card.querySelector('[data-action="timer"]').textContent = 'Pausar';
+      }
+      updateCardTime(card);
+    }
+
+    function updateCardTime(card) {
+      const timer = readTimer(card.dataset.taskKey);
+      card.querySelector('[data-role="display"]').textContent = formatTime(elapsedMilliseconds(timer));
+    }
+
+    function finalElapsedMilliseconds(card) {
+      if (card.querySelector('[data-role="editor"]').hidden) {
+        return elapsedMilliseconds(readTimer(card.dataset.taskKey));
+      }
+      const minutes = Number(card.querySelector('[data-role="minutes"]').value);
+      const seconds = Number(card.querySelector('[data-role="seconds"]').value);
+      if (!Number.isInteger(minutes) || minutes < 0 || !Number.isInteger(seconds) || seconds < 0 || seconds > 59) {
+        throw new Error('Informe minutos e segundos válidos (0 a 59 segundos).');
+      }
+      return (minutes * 60 + seconds) * 1000;
+    }
+
+    async function saveTask(card) {
+      if (!requireExecutor()) return;
+      const subcategory = card.dataset.existingName || card.querySelector('[data-role="name"]').value.trim();
+      if (!subcategory) {
+        showToast('Informe o nome da nova tarefa.', true, 2500);
+        card.querySelector('[data-role="name"]').focus();
+        return;
+      }
+
+      let durationMs;
+      try {
+        durationMs = finalElapsedMilliseconds(card);
+      } catch (error) {
+        showToast(error.message, true, 2500);
+        return;
+      }
+
+      const saveButton = card.querySelector('[data-action="save"]');
+      saveButton.disabled = true;
+      saveButton.textContent = 'Salvando…';
+      const payload = {
+        Carimbo: new Date().toISOString(),
+        'nome-executor': executorElement.value,
+        'nome-categoria': card.dataset.category,
+        'nome-subcategoria': subcategory,
+        'itens-necessarios': card.querySelector('[data-role="items"]').value.trim(),
+        'cronometro-minutos': durationMs / 60000
+      };
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error('Falha HTTP ' + response.status);
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error || 'O servidor não confirmou o salvamento.');
+        localStorage.removeItem(card.dataset.taskKey);
+        showToast('Tarefa salva com sucesso.', false, 2200);
+        await loadTasks();
+      } catch (error) {
+        console.error('Erro ao salvar tarefa.', error);
+        showToast('Não foi possível salvar. Verifique a conexão e tente novamente.', true, 3200);
+      } finally {
+        saveButton.disabled = false;
+        saveButton.textContent = 'Salvar';
+      }
+    }
+
+    async function loadTasks() {
+      statusElement.textContent = 'Carregando…';
+      try {
+        const response = await fetch(API_URL, { method: 'GET', cache: 'no-store' });
+        if (!response.ok) throw new Error('Falha HTTP ' + response.status);
+        const result = await response.json();
+        if (!result.success || !Array.isArray(result.data)) throw new Error(result.error || 'Resposta inválida do servidor.');
+        taskData = result.data;
+        renderCategories(taskData);
+        statusElement.textContent = taskData.length ? taskData.length + ' registros' : 'Sem registros';
+      } catch (error) {
+        console.error('Erro ao carregar tarefas.', error);
+        statusElement.textContent = 'Erro ao carregar';
+        categoriesElement.innerHTML = '<div class="message error">Não foi possível carregar o histórico. Confira a implantação do Apps Script e a conexão e tente novamente.</div><button type="button" class="button button-secondary" id="retry">Tentar novamente</button>';
+        document.getElementById('retry').addEventListener('click', loadTasks);
+      }
+    }
+
+    categoriesElement.addEventListener('click', function (event) {
+      const categoryButton = event.target.closest('.category-toggle');
+      if (categoryButton) {
+        const content = document.getElementById(categoryButton.getAttribute('aria-controls'));
+        const expanded = categoryButton.getAttribute('aria-expanded') === 'true';
+        categoryButton.setAttribute('aria-expanded', String(!expanded));
+        content.hidden = expanded;
+        return;
+      }
+      const actionButton = event.target.closest('[data-action]');
+      if (!actionButton) return;
+      const card = actionButton.closest('[data-task-key]');
+      if (actionButton.dataset.action === 'timer') toggleTimer(card);
+      if (actionButton.dataset.action === 'save') saveTask(card);
+    });
+
+    window.setInterval(function () {
+      document.querySelectorAll('[data-task-key]').forEach(function (card) {
+        if (readTimer(card.dataset.taskKey).startedAt) updateCardTime(card);
+      });
+    }, 500);
+
+    loadTasks();
+  </script>
+</body>
+</html>
