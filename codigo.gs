@@ -52,8 +52,8 @@ function doPost(event) {
     const items = String(payload['itens-necessarios'] || '').trim();
     const minutes = Number(payload['cronometro-minutos']);
 
-    if (!executor || !category || !subcategory) {
-      throw new Error('Executor, categoria e tarefa são obrigatórios.');
+    if (!executor || !category) {
+      throw new Error('Executor e categoria são obrigatórios.');
     }
     if (!isFinite(minutes) || minutes < 0) {
       throw new Error('O tempo deve ser um número válido maior ou igual a zero.');

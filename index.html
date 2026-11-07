@@ -53,6 +53,40 @@
     .category-name { flex: 1; font-weight: 800; }
     .category-average { color: var(--muted); font-size: .82rem; white-space: nowrap; }
     .category-content { display: grid; gap: 11px; padding: 0 12px 12px; }
+    .category-new {
+      display: grid; gap: 12px; padding: 12px;
+      background: #f9fbf8; border: 1px dashed #d8e2d8; border-radius: 16px;
+    }
+    .category-trigger {
+      min-height: 46px; padding: 11px 16px; border: 1px solid #cfe2d4; border-radius: 12px;
+      background: linear-gradient(180deg, #effaf1 0%, #e7f3ea 100%); color: #285d46;
+      font-weight: 800; text-align: center; letter-spacing: .01em;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+    }
+    .category-trigger:hover {
+      background: linear-gradient(180deg, #edf9f1 0%, #e2f0e4 100%);
+    }
+    .category-form {
+      display: grid; gap: 10px; padding: 12px 0 0;
+    }
+    .category-form-header {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .category-form-header h3 {
+      margin: 0; font-size: 1rem;
+    }
+    .category-close {
+      min-width: 32px; height: 32px; border: 0; border-radius: 50%; background: #edf5ef; color: #285d46; font-size: 1.2rem; line-height: 1;
+    }
+    .category-actions {
+      display: flex; gap: 8px;
+    }
+    .category-actions .button-secondary {
+      flex: 0 0 auto;
+      min-width: 120px;
+    }
+    .category-new .controls { margin-top: 0; }
+    .category-new .button { width: 100%; }
     .task-card, .other-task { padding: 14px; }
     .task-title { margin: 0 0 10px; font-size: .98rem; }
     .average { margin: -4px 0 12px; color: var(--muted); font-size: .82rem; }
@@ -119,7 +153,7 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzQSolZcK2xEcSS0BgSdA5erZTU9jiO5FIl4A49AroJ2Xkip6eTln7YC0s2hgN25KFXeA/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxcFwLjSIrwv5XwhVGjpTMz-h6plgTNGrZSaN78RPIXv8OgHtzwpoyNngzgUwGMHOlIRw/exec';
     const STORAGE_PREFIX = 'tarefas-domesticas:timer:';
     const categoriesElement = document.getElementById('categories');
     const statusElement = document.getElementById('status');
@@ -204,6 +238,22 @@
         '<button type="button" class="button button-primary" data-action="save">Salvar</button></div></div></article>';
     }
 
+    function newCategoryTemplate() {
+      return '<div class="category-new" data-role="new-category-panel">' +
+        '<button type="button" class="category-trigger" data-action="toggle-new-category" aria-expanded="false">＋ Adicionar categoria</button>' +
+        '<div class="category-form" data-role="new-category-form" hidden>' +
+        '<div class="category-form-header">' +
+        '<h3>Nova categoria</h3>' +
+        '<button type="button" class="category-close" data-action="close-new-category" aria-label="Fechar">×</button>' +
+        '</div>' +
+        '<div class="field"><label for="new-category-name">Nome da categoria</label>' +
+        '<input id="new-category-name" type="text" data-role="new-category-name" maxlength="120" placeholder="Ex.: Lavanderia"></div>' +
+        '<div class="category-actions"><button type="button" class="button button-secondary" data-action="close-new-category">Cancelar</button>' +
+        '<button type="button" class="button button-primary" data-action="save-new-category">Salvar</button></div>' +
+        '</div>' +
+        '</div>';
+    }
+
     function renderCategories(data) {
       const grouped = new Map();
       data.forEach(function (row) {
@@ -217,7 +267,7 @@
       });
 
       if (!grouped.size) {
-        categoriesElement.innerHTML = '<div class="empty">Ainda não há tarefas no histórico. Use "Outra Tarefa" quando uma categoria estiver disponível.</div>';
+        categoriesElement.innerHTML = '<div class="empty">Ainda não há tarefas no histórico. Use a opção “+ Nova categoria” para criar a primeira categoria.</div>' + newCategoryTemplate();
         return;
       }
 
@@ -235,7 +285,7 @@
           '<span class="chevron" aria-hidden="true">›</span><span class="category-name">' + escapeHtml(category) + '</span>' +
           '<span class="category-average">Total médio: ' + displayMinutes(combinedAverage) + '</span></button>' +
           '<div class="category-content" id="' + id + '" hidden>' + taskCards + makeTaskCard(category, '', [], true) + '</div></section>';
-      }).join('');
+      }).join('') + newCategoryTemplate();
     }
 
     function showToast(message, isError, duration) {
@@ -308,6 +358,35 @@
       return (minutes * 60 + seconds) * 1000;
     }
 
+    async function submitTaskRecord(category, subcategory, items, minutes) {
+      if (!requireExecutor()) return false;
+
+      const payload = {
+        Carimbo: new Date().toISOString(),
+        'nome-executor': executorElement.value,
+        'nome-categoria': category,
+        'nome-subcategoria': subcategory,
+        'itens-necessarios': items,
+        'cronometro-minutos': minutes
+      };
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error('Falha HTTP ' + response.status);
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error || 'O servidor não confirmou o salvamento.');
+        return true;
+      } catch (error) {
+        console.error('Erro ao salvar tarefa.', error);
+        showToast('Não foi possível salvar. Verifique a conexão e tente novamente.', true, 3200);
+        return false;
+      }
+    }
+
     async function saveTask(card) {
       if (!requireExecutor()) return;
       const subcategory = card.dataset.existingName || card.querySelector('[data-role="name"]').value.trim();
@@ -328,34 +407,37 @@
       const saveButton = card.querySelector('[data-action="save"]');
       saveButton.disabled = true;
       saveButton.textContent = 'Salvando…';
-      const payload = {
-        Carimbo: new Date().toISOString(),
-        'nome-executor': executorElement.value,
-        'nome-categoria': card.dataset.category,
-        'nome-subcategoria': subcategory,
-        'itens-necessarios': card.querySelector('[data-role="items"]').value.trim(),
-        'cronometro-minutos': durationMs / 60000
-      };
 
       try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload)
-        });
-        if (!response.ok) throw new Error('Falha HTTP ' + response.status);
-        const result = await response.json();
-        if (!result.success) throw new Error(result.error || 'O servidor não confirmou o salvamento.');
+        const ok = await submitTaskRecord(card.dataset.category, subcategory, card.querySelector('[data-role="items"]').value.trim(), durationMs / 60000);
+        if (!ok) return;
         localStorage.removeItem(card.dataset.taskKey);
         showToast('Tarefa salva com sucesso.', false, 2200);
         await loadTasks();
-      } catch (error) {
-        console.error('Erro ao salvar tarefa.', error);
-        showToast('Não foi possível salvar. Verifique a conexão e tente novamente.', true, 3200);
       } finally {
         saveButton.disabled = false;
         saveButton.textContent = 'Salvar';
       }
+    }
+
+    async function saveNewCategory(input) {
+      const category = input.value.trim();
+      if (!category) {
+        showToast('Informe o nome da nova categoria.', true, 2500);
+        input.focus();
+        return;
+      }
+
+      const ok = await submitTaskRecord(category, '', '', 0);
+      if (!ok) return;
+      showToast('Categoria salva com sucesso.', false, 2200);
+      input.value = '';
+      const panel = input.closest('[data-role="new-category-panel"]');
+      const trigger = panel.querySelector('[data-action="toggle-new-category"]');
+      const form = panel.querySelector('[data-role="new-category-form"]');
+      form.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+      await loadTasks();
     }
 
     async function loadTasks() {
@@ -377,14 +459,46 @@
     }
 
     categoriesElement.addEventListener('click', function (event) {
-      const categoryButton = event.target.closest('.category-toggle');
-      if (categoryButton) {
-        const content = document.getElementById(categoryButton.getAttribute('aria-controls'));
-        const expanded = categoryButton.getAttribute('aria-expanded') === 'true';
-        categoryButton.setAttribute('aria-expanded', String(!expanded));
+      const categoryToggle = event.target.closest('.category-toggle');
+      if (categoryToggle) {
+        const content = document.getElementById(categoryToggle.getAttribute('aria-controls'));
+        const expanded = categoryToggle.getAttribute('aria-expanded') === 'true';
+        categoryToggle.setAttribute('aria-expanded', String(!expanded));
         content.hidden = expanded;
         return;
       }
+
+      const toggleNewCategoryButton = event.target.closest('[data-action="toggle-new-category"]');
+      if (toggleNewCategoryButton) {
+        const panel = toggleNewCategoryButton.closest('[data-role="new-category-panel"]');
+        const form = panel.querySelector('[data-role="new-category-form"]');
+        const willShow = form.hidden;
+        form.hidden = !willShow;
+        toggleNewCategoryButton.setAttribute('aria-expanded', String(willShow));
+        if (willShow) {
+          panel.querySelector('[data-role="new-category-name"]').focus();
+        }
+        return;
+      }
+
+      const closeNewCategoryButton = event.target.closest('[data-action="close-new-category"]');
+      if (closeNewCategoryButton) {
+        const panel = closeNewCategoryButton.closest('[data-role="new-category-panel"]');
+        const form = panel.querySelector('[data-role="new-category-form"]');
+        const trigger = panel.querySelector('[data-action="toggle-new-category"]');
+        form.hidden = true;
+        trigger.setAttribute('aria-expanded', 'false');
+        return;
+      }
+
+      const saveNewCategoryButton = event.target.closest('[data-action="save-new-category"]');
+      if (saveNewCategoryButton) {
+        const panel = saveNewCategoryButton.closest('[data-role="new-category-panel"]');
+        const input = panel.querySelector('[data-role="new-category-name"]');
+        saveNewCategory(input);
+        return;
+      }
+
       const actionButton = event.target.closest('[data-action]');
       if (!actionButton) return;
       const card = actionButton.closest('[data-task-key]');
