@@ -20,17 +20,18 @@ function doGet() {
     const headerIndexes = getHeaderIndexes_(values[0]);
     const data = values.slice(1)
       .filter(function (row) {
-        return row[headerIndexes['nome-categoria']] &&
-          row[headerIndexes['nome-subcategoria']];
+        return row[headerIndexes['nome-categoria']];
       })
       .map(function (row) {
         const stamp = row[headerIndexes.Carimbo];
+        const category = String(row[headerIndexes['nome-categoria']] || '').trim();
+        const subcategory = String(row[headerIndexes['nome-subcategoria']] || category || '').trim();
         const minutes = Number(row[headerIndexes['cronometro-minutos']]);
         return {
           Carimbo: stamp instanceof Date ? stamp.toISOString() : stamp,
           'nome-executor': String(row[headerIndexes['nome-executor']] || ''),
-          'nome-categoria': String(row[headerIndexes['nome-categoria']]),
-          'nome-subcategoria': String(row[headerIndexes['nome-subcategoria']]),
+          'nome-categoria': category,
+          'nome-subcategoria': subcategory,
           'itens-necessarios': String(row[headerIndexes['itens-necessarios']] || ''),
           'cronometro-minutos': isFinite(minutes) ? minutes : 0
         };

@@ -119,7 +119,7 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbyUnK6ZwvpCbMIde01OTjbost_mWCRIh5KErBhq477i4IvhHvmOW_a7oK3z7r7ijAXLrQ/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzQSolZcK2xEcSS0BgSdA5erZTU9jiO5FIl4A49AroJ2Xkip6eTln7YC0s2hgN25KFXeA/exec';
     const STORAGE_PREFIX = 'tarefas-domesticas:timer:';
     const categoriesElement = document.getElementById('categories');
     const statusElement = document.getElementById('status');
@@ -133,8 +133,13 @@
       });
     }
 
+    function normalizeSubcategory(category, subcategory) {
+      return String(subcategory || category || '').trim();
+    }
+
     function taskKey(category, subcategory) {
-      return STORAGE_PREFIX + encodeURIComponent(category) + ':' + encodeURIComponent(subcategory);
+      const normalized = normalizeSubcategory(category, subcategory);
+      return STORAGE_PREFIX + encodeURIComponent(category) + ':' + encodeURIComponent(normalized);
     }
 
     function readTimer(key) {
@@ -179,15 +184,16 @@
     }
 
     function makeTaskCard(category, subcategory, rows, isNew) {
-      const key = taskKey(category, subcategory);
+      const normalizedSubcategory = normalizeSubcategory(category, subcategory);
+      const key = taskKey(category, normalizedSubcategory);
       const timer = readTimer(key);
       const pausedSeconds = Math.floor(timer.elapsedMs / 1000);
-      const title = isNew ? 'Outra Tarefa' : escapeHtml(subcategory);
+      const title = isNew ? 'Outra Tarefa' : escapeHtml(normalizedSubcategory);
       const avg = isNew ? '' : '<p class="average">Média: ' + displayMinutes(averageFor(rows)) + '</p>';
       const nameField = isNew
         ? '<div class="field"><label for="name-' + escapeHtml(key) + '">Nome da tarefa</label><input type="text" data-role="name" id="name-' + escapeHtml(key) + '" placeholder="Ex.: Limpar geladeira" maxlength="160"></div>'
         : '';
-      return '<article class="' + (isNew ? 'other-task' : 'task-card') + '" data-task-key="' + escapeHtml(key) + '" data-category="' + escapeHtml(category) + '" data-existing-name="' + (isNew ? '' : escapeHtml(subcategory)) + '">' +
+      return '<article class="' + (isNew ? 'other-task' : 'task-card') + '" data-task-key="' + escapeHtml(key) + '" data-category="' + escapeHtml(category) + '" data-existing-name="' + (isNew ? '' : escapeHtml(normalizedSubcategory)) + '">' +
         '<div class="task-card-inner"><div><h3 class="task-title">' + title + '</h3>' + avg + nameField +
         '<div class="field"><label>Itens necessários</label><input type="text" data-role="items" value="' + escapeHtml(latestItems(rows)) + '" maxlength="500" placeholder="Materiais usados"></div>' +
         '<div class="time-display" data-role="display">' + formatTime(elapsedMilliseconds(timer)) + '</div>' +
@@ -202,8 +208,8 @@
       const grouped = new Map();
       data.forEach(function (row) {
         const category = String(row['nome-categoria'] || '').trim();
-        const subcategory = String(row['nome-subcategoria'] || '').trim();
-        if (!category || !subcategory) return;
+        const subcategory = normalizeSubcategory(category, row['nome-subcategoria']);
+        if (!category) return;
         if (!grouped.has(category)) grouped.set(category, new Map());
         const tasks = grouped.get(category);
         if (!tasks.has(subcategory)) tasks.set(subcategory, []);
