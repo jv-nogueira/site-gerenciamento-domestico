@@ -79,14 +79,14 @@
       min-width: 32px; height: 32px; border: 0; border-radius: 50%; background: #edf5ef; color: #285d46; font-size: 1.2rem; line-height: 1;
     }
     .category-actions {
-      display: flex; gap: 8px;
+      display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px;
+      align-items: center;
     }
-    .category-actions .button-secondary {
-      flex: 0 0 auto;
-      min-width: 120px;
+    .category-actions .button {
+      width: 100%;
+      min-height: 42px;
     }
     .category-new .controls { margin-top: 0; }
-    .category-new .button { width: 100%; }
     .task-card, .other-task { padding: 14px; }
     .task-title { margin: 0 0 10px; font-size: .98rem; }
     .average { margin: -4px 0 12px; color: var(--muted); font-size: .82rem; }
@@ -97,9 +97,18 @@
       font-weight: 750; transition: background .15s, transform .15s;
     }
     .button:active { transform: scale(.98); }
+    .button:disabled {
+      opacity: .7; cursor: wait;
+    }
     .button-primary { flex: 1; color: #fff; background: var(--green); }
     .button-primary:hover { background: var(--green-dark); }
     .button-secondary { color: #285d46; background: #edf5ef; border-color: #dcebe0; }
+    .task-card .controls {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+    }
+    .task-card .controls .button {
+      width: 100%;
+    }
     .time-display { margin: 12px 0 0; color: var(--green-dark); font-size: 1.15rem; font-variant-numeric: tabular-nums; font-weight: 800; }
     .time-editor { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
     .time-editor .field { margin-top: 0; }
@@ -227,6 +236,7 @@
       const nameField = isNew
         ? '<div class="field"><label for="name-' + escapeHtml(key) + '">Nome da tarefa</label><input type="text" data-role="name" id="name-' + escapeHtml(key) + '" placeholder="Ex.: Limpar geladeira" maxlength="160"></div>'
         : '';
+      const timerLabel = timer.startedAt ? 'Pausar' : timer.wasPaused ? 'Continuar' : 'Start';
       return '<article class="' + (isNew ? 'other-task' : 'task-card') + '" data-task-key="' + escapeHtml(key) + '" data-category="' + escapeHtml(category) + '" data-existing-name="' + (isNew ? '' : escapeHtml(normalizedSubcategory)) + '">' +
         '<div class="task-card-inner"><div><h3 class="task-title">' + title + '</h3>' + avg + nameField +
         '<div class="field"><label>Itens necessários</label><input type="text" data-role="items" value="' + escapeHtml(latestItems(rows)) + '" maxlength="500" placeholder="Materiais usados"></div>' +
@@ -234,7 +244,8 @@
         '<div class="time-editor" data-role="editor"' + (timer.startedAt || !timer.wasPaused ? ' hidden' : '') + '>' +
         '<div class="field"><label>Minutos</label><input type="number" data-role="minutes" min="0" step="1" inputmode="numeric" value="' + Math.floor(pausedSeconds / 60) + '"></div>' +
         '<div class="field"><label>Segundos</label><input type="number" data-role="seconds" min="0" max="59" step="1" inputmode="numeric" value="' + pausedSeconds % 60 + '"></div></div></div>' +
-        '<div class="controls"><button type="button" class="button button-secondary" data-action="timer">' + (timer.startedAt ? 'Pausar' : timer.wasPaused ? 'Continuar' : 'Start') + '</button>' +
+        '<div class="controls"><button type="button" class="button button-secondary" data-action="timer">' + timerLabel + '</button>' +
+        '<button type="button" class="button button-secondary" data-action="reset">Zerar</button>' +
         '<button type="button" class="button button-primary" data-action="save">Salvar</button></div></div></article>';
     }
 
@@ -254,26 +265,41 @@
         '</div>';
     }
 
+    function cleanupDuplicateCategoryTimers(data) {
+      data.forEach(function (row) {
+        const category = String(row['nome-categoria'] || '').trim();
+        const subcategory = String(row['nome-subcategoria'] || '').trim();
+        if (category && (!subcategory || subcategory === category)) {
+          localStorage.removeItem(taskKey(category, category));
+        }
+      });
+    }
+
     function renderCategories(data) {
+      cleanupDuplicateCategoryTimers(data);
+      const categories = Array.from(new Set(data.map(function (row) {
+        return String(row['nome-categoria'] || '').trim();
+      }).filter(Boolean)));
+
       const grouped = new Map();
       data.forEach(function (row) {
         const category = String(row['nome-categoria'] || '').trim();
-        const subcategory = normalizeSubcategory(category, row['nome-subcategoria']);
-        if (!category) return;
+        const rawSubcategory = String(row['nome-subcategoria'] || '').trim();
+        const subcategory = normalizeSubcategory(category, rawSubcategory);
+        if (!category || !rawSubcategory || rawSubcategory === category) return;
         if (!grouped.has(category)) grouped.set(category, new Map());
         const tasks = grouped.get(category);
         if (!tasks.has(subcategory)) tasks.set(subcategory, []);
         tasks.get(subcategory).push(row);
       });
 
-      if (!grouped.size) {
+      if (!categories.length) {
         categoriesElement.innerHTML = '<div class="empty">Ainda não há tarefas no histórico. Use a opção “+ Nova categoria” para criar a primeira categoria.</div>' + newCategoryTemplate();
         return;
       }
 
-      categoriesElement.innerHTML = Array.from(grouped.entries()).map(function (entry, index) {
-        const category = entry[0];
-        const tasks = entry[1];
+      categoriesElement.innerHTML = categories.map(function (category, index) {
+        const tasks = grouped.get(category) || new Map();
         const combinedAverage = Array.from(tasks.values()).reduce(function (sum, rows) {
           return sum + averageFor(rows);
         }, 0);
@@ -309,8 +335,26 @@
 
     function setTimerInputs(card, milliseconds) {
       const totalSeconds = Math.floor(milliseconds / 1000);
-      card.querySelector('[data-role="minutes"]').value = String(Math.floor(totalSeconds / 60));
-      card.querySelector('[data-role="seconds"]').value = String(totalSeconds % 60);
+      const minutesInput = card.querySelector('[data-role="minutes"]');
+      const secondsInput = card.querySelector('[data-role="seconds"]');
+      if (minutesInput) minutesInput.value = String(Math.floor(totalSeconds / 60));
+      if (secondsInput) secondsInput.value = String(totalSeconds % 60);
+    }
+
+    function resetTaskTimer(card) {
+      const key = card.dataset.taskKey;
+      localStorage.removeItem(key);
+      const timer = readTimer(key);
+      timer.elapsedMs = 0;
+      timer.startedAt = null;
+      timer.wasPaused = false;
+      localStorage.setItem(key, JSON.stringify(timer));
+      const editor = card.querySelector('[data-role="editor"]');
+      if (editor) editor.hidden = true;
+      const timerButton = card.querySelector('[data-action="timer"]');
+      if (timerButton) timerButton.textContent = 'Start';
+      updateCardTime(card);
+      setTimerInputs(card, 0);
     }
 
     function toggleTimer(card) {
@@ -387,7 +431,24 @@
       }
     }
 
+    function lockSaveButton(button) {
+      if (!button) return;
+      button.disabled = true;
+      button.dataset.saving = 'true';
+      button.setAttribute('aria-busy', 'true');
+    }
+
+    function unlockSaveButton(button, label) {
+      if (!button) return;
+      button.disabled = false;
+      delete button.dataset.saving;
+      button.setAttribute('aria-busy', 'false');
+      button.textContent = label;
+    }
+
     async function saveTask(card) {
+      const saveButton = card.querySelector('[data-action="save"]');
+      if (!saveButton || saveButton.dataset.saving === 'true') return;
       if (!requireExecutor()) return;
       const subcategory = card.dataset.existingName || card.querySelector('[data-role="name"]').value.trim();
       if (!subcategory) {
@@ -404,8 +465,7 @@
         return;
       }
 
-      const saveButton = card.querySelector('[data-action="save"]');
-      saveButton.disabled = true;
+      lockSaveButton(saveButton);
       saveButton.textContent = 'Salvando…';
 
       try {
@@ -415,12 +475,13 @@
         showToast('Tarefa salva com sucesso.', false, 2200);
         await loadTasks();
       } finally {
-        saveButton.disabled = false;
-        saveButton.textContent = 'Salvar';
+        unlockSaveButton(saveButton, 'Salvar');
       }
     }
 
     async function saveNewCategory(input) {
+      const button = input.closest('[data-role="new-category-panel"]').querySelector('[data-action="save-new-category"]');
+      if (!button || button.dataset.saving === 'true') return;
       const category = input.value.trim();
       if (!category) {
         showToast('Informe o nome da nova categoria.', true, 2500);
@@ -428,16 +489,23 @@
         return;
       }
 
-      const ok = await submitTaskRecord(category, '', '', 0);
-      if (!ok) return;
-      showToast('Categoria salva com sucesso.', false, 2200);
-      input.value = '';
-      const panel = input.closest('[data-role="new-category-panel"]');
-      const trigger = panel.querySelector('[data-action="toggle-new-category"]');
-      const form = panel.querySelector('[data-role="new-category-form"]');
-      form.hidden = true;
-      trigger.setAttribute('aria-expanded', 'false');
-      await loadTasks();
+      lockSaveButton(button);
+      button.textContent = 'Salvando…';
+
+      try {
+        const ok = await submitTaskRecord(category, '', '', 0);
+        if (!ok) return;
+        showToast('Categoria salva com sucesso.', false, 2200);
+        input.value = '';
+        const panel = input.closest('[data-role="new-category-panel"]');
+        const trigger = panel.querySelector('[data-action="toggle-new-category"]');
+        const form = panel.querySelector('[data-role="new-category-form"]');
+        form.hidden = true;
+        trigger.setAttribute('aria-expanded', 'false');
+        await loadTasks();
+      } finally {
+        unlockSaveButton(button, 'Salvar');
+      }
     }
 
     async function loadTasks() {
@@ -503,6 +571,7 @@
       if (!actionButton) return;
       const card = actionButton.closest('[data-task-key]');
       if (actionButton.dataset.action === 'timer') toggleTimer(card);
+      if (actionButton.dataset.action === 'reset') resetTaskTimer(card);
       if (actionButton.dataset.action === 'save') saveTask(card);
     });
 
