@@ -15,21 +15,27 @@
       font-synthesis: none;
       --green: #277453;
       --green-dark: #1d5e43;
+      --green-light: #effaf1;
       --muted: #6d7b73;
       --border: #e2e9e2;
       --surface: #fff;
+      --danger: #c0392b;
+      --danger-bg: #fff0f0;
     }
     * { box-sizing: border-box; }
     body { margin: 0; min-width: 320px; }
     button, input, select { font: inherit; }
     button { cursor: pointer; }
     [hidden] { display: none !important; }
-    .container { width: min(100% - 28px, 760px); margin: 0 auto; padding: 28px 0 56px; }
+    .container { width: min(100% - 28px, 920px); margin: 0 auto; padding: 28px 0 56px; }
     header { margin-bottom: 22px; }
     .eyebrow { margin: 0 0 7px; color: var(--green); font-size: .75rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
     h1 { margin: 0; font-size: clamp(1.7rem, 7vw, 2.25rem); letter-spacing: -.04em; }
     .intro { margin: 8px 0 0; color: var(--muted); line-height: 1.5; }
-    .executor-card, .category, .task-card, .other-task { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; }
+    
+    .executor-card, .category, .task-card, .new-task-panel, .history-card { 
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px; 
+    }
     .executor-card { display: grid; gap: 8px; padding: 16px; margin-bottom: 18px; }
     label { color: #405248; font-size: .86rem; font-weight: 700; }
     select, input[type="text"], input[type="number"] {
@@ -39,8 +45,9 @@
     select:focus, input:focus { border-color: var(--green); box-shadow: 0 0 0 3px #27745320; }
     select.invalid { border-color: #d33f49; animation: flash-border .45s ease-in-out 4; }
     @keyframes flash-border { 50% { box-shadow: 0 0 0 4px #d33f4930; } }
-    .section-heading { display: flex; justify-content: space-between; align-items: center; margin: 24px 2px 12px; }
-    .section-heading h2 { margin: 0; font-size: 1.05rem; }
+
+    .section-heading { display: flex; justify-content: space-between; align-items: center; margin: 26px 2px 14px; }
+    .section-heading h2 { margin: 0; font-size: 1.15rem; font-weight: 800; }
     #status { color: var(--muted); font-size: .84rem; }
     #categories { display: grid; gap: 12px; }
     .category { overflow: hidden; }
@@ -53,43 +60,47 @@
     .category-name { flex: 1; font-weight: 800; }
     .category-average { color: var(--muted); font-size: .82rem; white-space: nowrap; }
     .category-content { display: grid; gap: 11px; padding: 0 12px 12px; }
+
+    /* Estilo unificado para botões de adicionar */
+    .button-trigger {
+      display: block; width: 100%; min-height: 46px; padding: 11px 16px; 
+      border: 1px solid #cfe2d4; border-radius: 12px;
+      background: linear-gradient(180deg, #effaf1 0%, #e7f3ea 100%); color: #285d46;
+      font-weight: 800; text-align: center; letter-spacing: .01em;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.7); transition: background .15s;
+    }
+    .button-trigger:hover {
+      background: linear-gradient(180deg, #edf9f1 0%, #e2f0e4 100%);
+    }
+
     .category-new {
       display: grid; gap: 12px; padding: 12px;
       background: #f9fbf8; border: 1px dashed #d8e2d8; border-radius: 16px;
     }
-    .category-trigger {
-      min-height: 46px; padding: 11px 16px; border: 1px solid #cfe2d4; border-radius: 12px;
-      background: linear-gradient(180deg, #effaf1 0%, #e7f3ea 100%); color: #285d46;
-      font-weight: 800; text-align: center; letter-spacing: .01em;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+    .new-task-panel {
+      display: grid; gap: 10px; padding: 12px;
+      background: #f9fbf8; border: 1px dashed #d8e2d8; border-radius: 14px;
     }
-    .category-trigger:hover {
-      background: linear-gradient(180deg, #edf9f1 0%, #e2f0e4 100%);
+    .form-box { display: grid; gap: 10px; padding-top: 4px; }
+    .form-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .form-header h3 { margin: 0; font-size: 1rem; font-weight: 800; }
+    .icon-close {
+      min-width: 32px; height: 32px; border: 0; border-radius: 50%; 
+      background: #edf5ef; color: #285d46; font-size: 1.2rem; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
     }
-    .category-form {
-      display: grid; gap: 10px; padding: 12px 0 0;
+    .action-row {
+      display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; align-items: center;
     }
-    .category-form-header {
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
-    }
-    .category-form-header h3 {
-      margin: 0; font-size: 1rem;
-    }
-    .category-close {
-      min-width: 32px; height: 32px; border: 0; border-radius: 50%; background: #edf5ef; color: #285d46; font-size: 1.2rem; line-height: 1;
-    }
-    .category-actions {
-      display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px;
-      align-items: center;
-    }
-    .category-actions .button {
-      width: 100%;
-      min-height: 42px;
-    }
-    .category-new .controls { margin-top: 0; }
-    .task-card, .other-task { padding: 14px; }
+    .action-row .button { width: 100%; min-height: 42px; }
+
+    .task-card { padding: 14px; }
     .task-title { margin: 0 0 10px; font-size: .98rem; }
-    .average { margin: -4px 0 12px; color: var(--muted); font-size: .82rem; }
+    .task-title-input {
+      font-size: 1rem; font-weight: 800; color: #23332c;
+      padding: 6px 10px; min-height: 38px; margin-bottom: 6px;
+    }
+    .average { margin: 2px 0 10px; color: var(--muted); font-size: .82rem; }
     .field { display: grid; gap: 6px; margin-top: 10px; }
     .controls { display: flex; gap: 9px; margin-top: 12px; }
     .button {
@@ -97,38 +108,79 @@
       font-weight: 750; transition: background .15s, transform .15s;
     }
     .button:active { transform: scale(.98); }
-    .button:disabled {
-      opacity: .7; cursor: wait;
-    }
+    .button:disabled { opacity: .7; cursor: wait; }
     .button-primary { flex: 1; color: #fff; background: var(--green); }
     .button-primary:hover { background: var(--green-dark); }
     .button-secondary { color: #285d46; background: #edf5ef; border-color: #dcebe0; }
+    .button-secondary:hover { background: #e2ede5; }
+    .button-danger { color: var(--danger); background: var(--danger-bg); border-color: #f5c6cb; }
+
     .task-card .controls {
       display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
     }
-    .task-card .controls .button {
-      width: 100%;
-    }
+    .task-card .controls .button { width: 100%; }
     .time-display { margin: 12px 0 0; color: var(--green-dark); font-size: 1.15rem; font-variant-numeric: tabular-nums; font-weight: 800; }
     .time-editor { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
     .time-editor .field { margin-top: 0; }
     .time-editor input { min-height: 42px; }
-    .other-task { background: #f9fbf8; border-style: dashed; }
-    .other-task h3 { margin: 0 0 8px; font-size: .94rem; }
+
+    /* Seção Histórico */
+    .history-card { padding: 16px; overflow: hidden; margin-top: 14px; }
+    .table-container {
+      width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 10px; border: 1px solid var(--border);
+    }
+    .history-table {
+      width: 100%; border-collapse: collapse; text-align: left; font-size: .86rem; background: #fff; min-width: 680px;
+    }
+    .history-table th {
+      background: #f7faf7; color: #405248; font-weight: 800; padding: 12px 10px;
+      border-bottom: 2px solid var(--border); white-space: nowrap; user-select: none; cursor: pointer;
+    }
+    .history-table th:hover { background: #edf5ef; }
+    .history-table th .sort-indicator { display: inline-block; margin-left: 4px; font-size: .8rem; color: var(--green); }
+    .history-table td {
+      padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: middle;
+    }
+    .history-table tr.dirty { background-color: #fbfbf0; }
+    .history-table input[type="text"] {
+      min-height: 34px; padding: 6px 8px; font-size: .84rem; border-radius: 6px;
+    }
+    .table-actions {
+      display: flex; gap: 6px; white-space: nowrap; justify-content: center;
+    }
+    .btn-table {
+      min-height: 32px; padding: 4px 10px; font-size: .8rem; border-radius: 6px; font-weight: 700;
+    }
+
+    .pagination {
+      display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 16px; flex-wrap: wrap;
+    }
+    .page-btn {
+      min-width: 36px; height: 36px; padding: 0 8px; border: 1px solid #d5dfd6;
+      background: #fff; border-radius: 8px; font-weight: 700; color: #334;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .page-btn:hover:not(:disabled) { background: #edf5ef; border-color: var(--green); }
+    .page-btn.active {
+      background: var(--green); color: #fff; border-color: var(--green);
+    }
+    .page-btn:disabled { opacity: .45; cursor: not-allowed; }
+
     .empty, .message { padding: 18px; border-radius: 12px; background: #fff; color: var(--muted); line-height: 1.5; }
     .message.error { color: #9c252d; background: #fff2f2; }
     .toast {
-      position: fixed; z-index: 5; left: 50%; bottom: max(20px, env(safe-area-inset-bottom));
-      width: max-content; max-width: calc(100% - 32px); padding: 12px 16px; border-radius: 12px;
+      position: fixed; z-index: 100; left: 50%; bottom: max(20px, env(safe-area-inset-bottom));
+      width: max-content; max-width: calc(100% - 32px); padding: 12px 18px; border-radius: 12px;
       color: #fff; background: #263a30; box-shadow: 0 8px 28px #14271d30;
       opacity: 0; pointer-events: none; transform: translate(-50%, 12px); transition: .2s;
     }
     .toast.show { opacity: 1; transform: translate(-50%, 0); }
     .toast.error { background: #a92c36; }
+
     @media (min-width: 600px) {
       .container { padding-top: 42px; }
       .category-content { padding: 0 16px 16px; }
-      .task-card, .other-task { padding: 17px; }
+      .task-card { padding: 17px; }
       .task-card-inner { display: grid; grid-template-columns: 1fr auto; gap: 18px; align-items: end; }
       .task-card-inner .controls { min-width: 210px; }
     }
@@ -143,7 +195,7 @@
     </header>
 
     <section class="executor-card" aria-label="Executor da tarefa">
-      <label for="executor">Executor:</label>
+      <label for="executor">Executor padrão:</label>
       <select id="executor">
         <option value="">Selecione uma pessoa</option>
         <option value="João Vitor">João Vitor</option>
@@ -158,17 +210,94 @@
     <section id="categories" aria-label="Categorias de tarefas">
       <div class="empty">Carregando tarefas…</div>
     </section>
+
+    <div class="section-heading">
+      <h2>Histórico da Planilha</h2>
+      <span id="history-status"></span>
+    </div>
+    <section id="history-section" class="history-card" aria-label="Histórico de tarefas">
+      <div id="history-content">
+        <div class="empty">Carregando histórico…</div>
+      </div>
+    </section>
   </main>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxcFwLjSIrwv5XwhVGjpTMz-h6plgTNGrZSaN78RPIXv8OgHtzwpoyNngzgUwGMHOlIRw/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbywfd0VZ6WnKlPrBkVHLyadFxwFyOfdid2Xjayy1thKQAfsZPAkL00UJhzHa67k_0SHmA/exec';
     const STORAGE_PREFIX = 'tarefas-domesticas:timer:';
     const categoriesElement = document.getElementById('categories');
     const statusElement = document.getElementById('status');
+    const historyStatusElement = document.getElementById('history-status');
+    const historyContentElement = document.getElementById('history-content');
     const executorElement = document.getElementById('executor');
+
     let taskData = [];
     let toastTimer;
+
+    // Configuração e Estado do Histórico
+    const historyState = {
+      sortCol: null,       // campo ativo: 'Carimbo', 'nome-executor', etc.
+      sortDir: 'original', // 'original' | 'asc' | 'desc'
+      currentPage: 1,
+      pageSize: 10,
+      dirtyRows: new Map() // rowNumber -> { fields: {...}, original: {...} }
+    };
+
+    /* ----------------------------------------------------
+       Formatação de Tempo e Duração Centralizada
+    ---------------------------------------------------- */
+    const DURATION_FORMAT_MODE = 'human_min_sec'; // 'human_min_sec' | 'decimal_min'
+
+    function formatDuration(minutesDecimal) {
+      const mins = Number(minutesDecimal);
+      if (!isFinite(mins) || mins < 0) return '0 min e 0 s';
+
+      if (DURATION_FORMAT_MODE === 'decimal_min') {
+        return mins.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' min';
+      }
+
+      // 'human_min_sec': X min e Y s
+      const totalSeconds = Math.round(mins * 60);
+      const m = Math.floor(totalSeconds / 60);
+      const s = totalSeconds % 60;
+      return m + ' min e ' + s + ' s';
+    }
+
+    // Minutos decimais para MM:SS
+    function minutesDecimalToMMSS(minutesDecimal) {
+      const mins = Number(minutesDecimal);
+      if (!isFinite(mins) || mins <= 0) return '00:00';
+      const totalSeconds = Math.round(mins * 60);
+      const m = Math.floor(totalSeconds / 60);
+      const s = totalSeconds % 60;
+      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+
+    // MM:SS para minutos decimais
+    function mmssToMinutesDecimal(mmssStr) {
+      const trimmed = String(mmssStr || '').trim();
+      const parts = trimmed.split(':');
+      if (parts.length !== 2) {
+        throw new Error('Formato de tempo inválido. Use MM:SS (ex: 11:37).');
+      }
+      const m = parseInt(parts[0], 10);
+      const s = parseInt(parts[1], 10);
+      if (isNaN(m) || isNaN(s) || m < 0 || s < 0 || s > 59) {
+        throw new Error('Minutos ou segundos inválidos (segundos devem ser de 0 a 59).');
+      }
+      return m + (s / 60);
+    }
+
+    function formatIsoToDisplayDate(isoOrStr) {
+      if (!isoOrStr) return '';
+      const date = new Date(isoOrStr);
+      if (isNaN(date.getTime())) return String(isoOrStr);
+      const pad = (n) => String(n).padStart(2, '0');
+      return pad(date.getDate()) + '/' + pad(date.getMonth() + 1) + '/' + date.getFullYear() + ' ' +
+             pad(date.getHours()) + ':' + pad(date.getMinutes()) + ':' + pad(date.getSeconds());
+    }
 
     function escapeHtml(value) {
       return String(value).replace(/[&<>"']/g, function (character) {
@@ -192,8 +321,7 @@
           ? { elapsedMs: value.elapsedMs, startedAt: value.startedAt || null, wasPaused: Boolean(value.wasPaused) }
           : { elapsedMs: 0, startedAt: null, wasPaused: false };
       } catch (error) {
-        console.error('Não foi possível ler o cronômetro salvo.', error);
-        return { elapsedMs: 0, startedAt: null };
+        return { elapsedMs: 0, startedAt: null, wasPaused: false };
       }
     }
 
@@ -206,10 +334,6 @@
       const minutes = Math.floor(totalSeconds / 60);
       const seconds = totalSeconds % 60;
       return String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
-    }
-
-    function displayMinutes(minutes) {
-      return Number(minutes).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' min';
     }
 
     function averageFor(rows) {
@@ -226,57 +350,104 @@
       return latest ? latest['itens-necessarios'] || '' : '';
     }
 
-    function makeTaskCard(category, subcategory, rows, isNew) {
+    /* ----------------------------------------------------
+       Proteção contra perda de edições não salvas
+    ---------------------------------------------------- */
+    function hasUnsavedChanges() {
+      return historyState.dirtyRows.size > 0;
+    }
+
+    function confirmDiscardChanges() {
+      if (!hasUnsavedChanges()) return true;
+      return window.confirm('Você possui edições pendentes não salvas no Histórico. Deseja descartar as alterações?');
+    }
+
+    window.addEventListener('beforeunload', function (e) {
+      if (hasUnsavedChanges()) {
+        e.preventDefault();
+        e.returnValue = 'Há alterações não salvas no histórico. Tem certeza de que deseja sair?';
+        return e.returnValue;
+      }
+    });
+
+    /* ----------------------------------------------------
+       Renderização de Categorias e Cards de Tarefa
+    ---------------------------------------------------- */
+    function makeTaskCard(category, subcategory, rows) {
       const normalizedSubcategory = normalizeSubcategory(category, subcategory);
       const key = taskKey(category, normalizedSubcategory);
       const timer = readTimer(key);
       const pausedSeconds = Math.floor(timer.elapsedMs / 1000);
-      const title = isNew ? 'Outra Tarefa' : escapeHtml(normalizedSubcategory);
-      const avg = isNew ? '' : '<p class="average">Média: ' + displayMinutes(averageFor(rows)) + '</p>';
-      const nameField = isNew
-        ? '<div class="field"><label for="name-' + escapeHtml(key) + '">Nome da tarefa</label><input type="text" data-role="name" id="name-' + escapeHtml(key) + '" placeholder="Ex.: Limpar geladeira" maxlength="160"></div>'
-        : '';
+      const avg = '<p class="average">Média: ' + formatDuration(averageFor(rows)) + '</p>';
       const timerLabel = timer.startedAt ? 'Pausar' : timer.wasPaused ? 'Continuar' : 'Start';
-      return '<article class="' + (isNew ? 'other-task' : 'task-card') + '" data-task-key="' + escapeHtml(key) + '" data-category="' + escapeHtml(category) + '" data-existing-name="' + (isNew ? '' : escapeHtml(normalizedSubcategory)) + '">' +
-        '<div class="task-card-inner"><div><h3 class="task-title">' + title + '</h3>' + avg + nameField +
+
+      return '<article class="task-card" data-task-key="' + escapeHtml(key) + '" data-category="' + escapeHtml(category) + '">' +
+        '<div class="task-card-inner"><div>' +
+        '<div class="field" style="margin-top:0;">' +
+          '<label>Nome da tarefa</label>' +
+          '<input type="text" data-role="title-input" class="task-title-input" value="' + escapeHtml(normalizedSubcategory) + '" maxlength="160" placeholder="Título da tarefa">' +
+        '</div>' +
+        avg +
         '<div class="field"><label>Itens necessários</label><input type="text" data-role="items" value="' + escapeHtml(latestItems(rows)) + '" maxlength="500" placeholder="Materiais usados"></div>' +
         '<div class="time-display" data-role="display">' + formatTime(elapsedMilliseconds(timer)) + '</div>' +
         '<div class="time-editor" data-role="editor"' + (timer.startedAt || !timer.wasPaused ? ' hidden' : '') + '>' +
-        '<div class="field"><label>Minutos</label><input type="number" data-role="minutes" min="0" step="1" inputmode="numeric" value="' + Math.floor(pausedSeconds / 60) + '"></div>' +
-        '<div class="field"><label>Segundos</label><input type="number" data-role="seconds" min="0" max="59" step="1" inputmode="numeric" value="' + pausedSeconds % 60 + '"></div></div></div>' +
-        '<div class="controls"><button type="button" class="button button-secondary" data-action="timer">' + timerLabel + '</button>' +
-        '<button type="button" class="button button-secondary" data-action="reset">Zerar</button>' +
-        '<button type="button" class="button button-primary" data-action="save">Salvar</button></div></div></article>';
+          '<div class="field"><label>Minutos</label><input type="number" data-role="minutes" min="0" step="1" inputmode="numeric" value="' + Math.floor(pausedSeconds / 60) + '"></div>' +
+          '<div class="field"><label>Segundos</label><input type="number" data-role="seconds" min="0" max="59" step="1" inputmode="numeric" value="' + pausedSeconds % 60 + '"></div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="controls">' +
+          '<button type="button" class="button button-secondary" data-action="timer">' + timerLabel + '</button>' +
+          '<button type="button" class="button button-secondary" data-action="reset">Zerar</button>' +
+          '<button type="button" class="button button-primary" data-action="save">Salvar</button>' +
+        '</div></div></article>';
+    }
+
+    function newTaskSectionTemplate(category, hasExistingTasks) {
+      const buttonLabel = hasExistingTasks ? '＋ Adicionar outra tarefa' : '＋ Adicionar a primeira tarefa';
+      return '<div class="new-task-panel" data-role="new-task-panel" data-category="' + escapeHtml(category) + '">' +
+        '<button type="button" class="button-trigger" data-action="toggle-new-task" aria-expanded="false">' + buttonLabel + '</button>' +
+        '<div class="form-box" data-role="new-task-form" hidden>' +
+          '<div class="form-header">' +
+            '<h3>Nova Tarefa</h3>' +
+            '<button type="button" class="icon-close" data-action="close-new-task" aria-label="Fechar">×</button>' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Nome da tarefa</label>' +
+            '<input type="text" data-role="new-task-name" placeholder="Ex.: Limpar espelho" maxlength="160">' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Itens necessários</label>' +
+            '<input type="text" data-role="new-task-items" placeholder="Materiais usados" maxlength="500">' +
+          '</div>' +
+          '<div class="action-row" style="margin-top: 8px;">' +
+            '<button type="button" class="button button-secondary" data-action="close-new-task">Cancelar</button>' +
+            '<button type="button" class="button button-primary" data-action="save-new-task">Salvar</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
     }
 
     function newCategoryTemplate() {
       return '<div class="category-new" data-role="new-category-panel">' +
-        '<button type="button" class="category-trigger" data-action="toggle-new-category" aria-expanded="false">＋ Adicionar categoria</button>' +
-        '<div class="category-form" data-role="new-category-form" hidden>' +
-        '<div class="category-form-header">' +
-        '<h3>Nova categoria</h3>' +
-        '<button type="button" class="category-close" data-action="close-new-category" aria-label="Fechar">×</button>' +
+        '<button type="button" class="button-trigger" data-action="toggle-new-category" aria-expanded="false">＋ Adicionar categoria</button>' +
+        '<div class="form-box" data-role="new-category-form" hidden>' +
+          '<div class="form-header">' +
+            '<h3>Nova Categoria</h3>' +
+            '<button type="button" class="icon-close" data-action="close-new-category" aria-label="Fechar">×</button>' +
+          '</div>' +
+          '<div class="field">' +
+            '<label for="new-category-name">Nome da categoria</label>' +
+            '<input id="new-category-name" type="text" data-role="new-category-name" maxlength="120" placeholder="Ex.: Lavanderia">' +
+          '</div>' +
+          '<div class="action-row" style="margin-top: 8px;">' +
+            '<button type="button" class="button button-secondary" data-action="close-new-category">Cancelar</button>' +
+            '<button type="button" class="button button-primary" data-action="save-new-category">Salvar</button>' +
+          '</div>' +
         '</div>' +
-        '<div class="field"><label for="new-category-name">Nome da categoria</label>' +
-        '<input id="new-category-name" type="text" data-role="new-category-name" maxlength="120" placeholder="Ex.: Lavanderia"></div>' +
-        '<div class="category-actions"><button type="button" class="button button-secondary" data-action="close-new-category">Cancelar</button>' +
-        '<button type="button" class="button button-primary" data-action="save-new-category">Salvar</button></div>' +
-        '</div>' +
-        '</div>';
-    }
-
-    function cleanupDuplicateCategoryTimers(data) {
-      data.forEach(function (row) {
-        const category = String(row['nome-categoria'] || '').trim();
-        const subcategory = String(row['nome-subcategoria'] || '').trim();
-        if (category && (!subcategory || subcategory === category)) {
-          localStorage.removeItem(taskKey(category, category));
-        }
-      });
+      '</div>';
     }
 
     function renderCategories(data) {
-      cleanupDuplicateCategoryTimers(data);
       const categories = Array.from(new Set(data.map(function (row) {
         return String(row['nome-categoria'] || '').trim();
       }).filter(Boolean)));
@@ -294,7 +465,7 @@
       });
 
       if (!categories.length) {
-        categoriesElement.innerHTML = '<div class="empty">Ainda não há tarefas no histórico. Use a opção “+ Nova categoria” para criar a primeira categoria.</div>' + newCategoryTemplate();
+        categoriesElement.innerHTML = '<div class="empty">Ainda não há tarefas no histórico. Use a opção “＋ Adicionar categoria” para começar.</div>' + newCategoryTemplate();
         return;
       }
 
@@ -305,34 +476,216 @@
         }, 0);
         const id = 'category-content-' + index;
         const taskCards = Array.from(tasks.entries()).map(function (task) {
-          return makeTaskCard(category, task[0], task[1], false);
+          return makeTaskCard(category, task[0], task[1]);
         }).join('');
+        const hasExisting = tasks.size > 0;
+
         return '<section class="category"><button type="button" class="category-toggle" aria-expanded="false" aria-controls="' + id + '">' +
           '<span class="chevron" aria-hidden="true">›</span><span class="category-name">' + escapeHtml(category) + '</span>' +
-          '<span class="category-average">Total médio: ' + displayMinutes(combinedAverage) + '</span></button>' +
-          '<div class="category-content" id="' + id + '" hidden>' + taskCards + makeTaskCard(category, '', [], true) + '</div></section>';
+          '<span class="category-average">Total médio: ' + formatDuration(combinedAverage) + '</span></button>' +
+          '<div class="category-content" id="' + id + '" hidden>' + taskCards + newTaskSectionTemplate(category, hasExisting) + '</div></section>';
       }).join('') + newCategoryTemplate();
     }
 
+    /* ----------------------------------------------------
+       Histórico da Planilha: Ordenação, Paginação e Edição
+    ---------------------------------------------------- */
+    function getSortedHistoryRows() {
+      // Cria cópia com index original da planilha
+      let rows = taskData.slice();
+
+      if (historyState.sortDir === 'original' || !historyState.sortCol) {
+        return rows;
+      }
+
+      const col = historyState.sortCol;
+      const isAsc = historyState.sortDir === 'asc';
+
+      rows.sort(function (a, b) {
+        let valA = a[col];
+        let valB = b[col];
+
+        if (col === 'Carimbo') {
+          valA = new Date(valA).getTime() || 0;
+          valB = new Date(valB).getTime() || 0;
+        } else if (col === 'cronometro-minutos' || col === 'rowNumber') {
+          valA = Number(valA) || 0;
+          valB = Number(valB) || 0;
+        } else {
+          valA = String(valA || '').toLowerCase();
+          valB = String(valB || '').toLowerCase();
+        }
+
+        if (valA < valB) return isAsc ? -1 : 1;
+        if (valA > valB) return isAsc ? 1 : -1;
+        return 0;
+      });
+
+      return rows;
+    }
+
+    function renderHistory() {
+      if (!taskData.length) {
+        historyStatusElement.textContent = '0 registros';
+        historyContentElement.innerHTML = '<div class="empty">Nenhum registro encontrado no histórico da planilha.</div>';
+        return;
+      }
+
+      const sortedRows = getSortedHistoryRows();
+      const totalRows = sortedRows.length;
+      const totalPages = Math.ceil(totalRows / historyState.pageSize) || 1;
+
+      if (historyState.currentPage > totalPages) {
+        historyState.currentPage = totalPages;
+      }
+
+      historyStatusElement.textContent = totalRows + ' registros • Página ' + historyState.currentPage + ' de ' + totalPages;
+
+      const startIndex = (historyState.currentPage - 1) * historyState.pageSize;
+      const pageRows = sortedRows.slice(startIndex, startIndex + historyState.pageSize);
+
+      // Indicadores de ordenação
+      function getSortIndicator(col) {
+        if (historyState.sortCol !== col || historyState.sortDir === 'original') return '';
+        return historyState.sortDir === 'asc' ? ' <span class="sort-indicator">▲</span>' : ' <span class="sort-indicator">▼</span>';
+      }
+
+      let html = '<div class="table-container"><table class="history-table"><thead><tr>' +
+        '<th data-sort="Carimbo">Carimbo' + getSortIndicator('Carimbo') + '</th>' +
+        '<th data-sort="nome-executor">Executor' + getSortIndicator('nome-executor') + '</th>' +
+        '<th data-sort="nome-categoria">Categoria' + getSortIndicator('nome-categoria') + '</th>' +
+        '<th data-sort="nome-subcategoria">Subcategoria / Tarefa' + getSortIndicator('nome-subcategoria') + '</th>' +
+        '<th data-sort="itens-necessarios">Itens Necessários' + getSortIndicator('itens-necessarios') + '</th>' +
+        '<th data-sort="cronometro-minutos">Tempo (MM:SS)' + getSortIndicator('cronometro-minutos') + '</th>' +
+        '<th style="text-align:center;">Ações</th>' +
+        '</tr></thead><tbody>';
+
+      pageRows.forEach(function (row) {
+        const rowNumber = row.rowNumber;
+        const isDirty = historyState.dirtyRows.has(rowNumber);
+        const rowValues = isDirty ? historyState.dirtyRows.get(rowNumber).fields : row;
+        const dirtyClass = isDirty ? ' class="dirty"' : '';
+
+        // Formatação de tempo em MM:SS
+        const timeMMSS = isDirty ? rowValues['cronometro-minutos-formatted'] : minutesDecimalToMMSS(row['cronometro-minutos']);
+        const stampDisplay = rowValues.Carimbo ? (rowValues.Carimbo.includes('T') ? formatIsoToDisplayDate(rowValues.Carimbo) : rowValues.Carimbo) : '';
+
+        html += '<tr data-row-number="' + rowNumber + '"' + dirtyClass + '>' +
+          '<td><input type="text" data-field="Carimbo" value="' + escapeHtml(stampDisplay) + '" style="min-width: 140px;"></td>' +
+          '<td><input type="text" data-field="nome-executor" value="' + escapeHtml(rowValues['nome-executor'] || '') + '" style="min-width: 110px;"></td>' +
+          '<td><input type="text" data-field="nome-categoria" value="' + escapeHtml(rowValues['nome-categoria'] || '') + '" style="min-width: 110px;"></td>' +
+          '<td><input type="text" data-field="nome-subcategoria" value="' + escapeHtml(rowValues['nome-subcategoria'] || '') + '" style="min-width: 130px;"></td>' +
+          '<td><input type="text" data-field="itens-necessarios" value="' + escapeHtml(rowValues['itens-necessarios'] || '') + '" style="min-width: 150px;"></td>' +
+          '<td><input type="text" data-field="cronometro-minutos-formatted" value="' + escapeHtml(timeMMSS) + '" placeholder="MM:SS" style="width: 80px; text-align: center;"></td>' +
+          '<td><div class="table-actions">' +
+            '<button type="button" class="button button-primary btn-table" data-action="save-history-row" ' + (isDirty ? '' : 'disabled') + '>Salvar</button>' +
+            '<button type="button" class="button button-secondary btn-table" data-action="cancel-history-row" ' + (isDirty ? '' : 'disabled') + '>Cancelar</button>' +
+          '</div></td>' +
+          '</tr>';
+      });
+
+      html += '</tbody></table></div>';
+
+      // Paginação
+      if (totalPages > 1) {
+        html += '<div class="pagination">';
+        html += '<button type="button" class="page-btn" data-page="' + (historyState.currentPage - 1) + '" ' + (historyState.currentPage === 1 ? 'disabled' : '') + ' aria-label="Página anterior">‹</button>';
+
+        for (let p = 1; p <= totalPages; p++) {
+          const activeClass = p === historyState.currentPage ? ' active' : '';
+          html += '<button type="button" class="page-btn' + activeClass + '" data-page="' + p + '">' + p + '</button>';
+        }
+
+        html += '<button type="button" class="page-btn" data-page="' + (historyState.currentPage + 1) + '" ' + (historyState.currentPage === totalPages ? 'disabled' : '') + ' aria-label="Próxima página">›</button>';
+        html += '</div>';
+      }
+
+      historyContentElement.innerHTML = html;
+    }
+
+    /* ----------------------------------------------------
+       Manipulação de Notificações (Toast) e Botões
+    ---------------------------------------------------- */
     function showToast(message, isError, duration) {
       const toast = document.getElementById('toast');
       window.clearTimeout(toastTimer);
       toast.textContent = message;
       toast.classList.toggle('error', Boolean(isError));
       toast.classList.add('show');
-      toastTimer = window.setTimeout(function () { toast.classList.remove('show'); }, duration);
+      toastTimer = window.setTimeout(function () { toast.classList.remove('show'); }, duration || 2500);
     }
 
     function requireExecutor() {
       if (executorElement.value) return true;
       const duration = 1800;
       executorElement.classList.add('invalid');
-      showToast('Selecione uma pessoa antes de salvar.', true, duration);
+      showToast('Selecione uma pessoa no topo antes de salvar.', true, duration);
       window.setTimeout(function () { executorElement.classList.remove('invalid'); }, duration);
       executorElement.focus();
       return false;
     }
 
+    function lockSaveButton(button) {
+      if (!button) return;
+      button.disabled = true;
+      button.dataset.saving = 'true';
+      button.setAttribute('aria-busy', 'true');
+    }
+
+    function unlockSaveButton(button, label) {
+      if (!button) return;
+      button.disabled = false;
+      delete button.dataset.saving;
+      button.setAttribute('aria-busy', 'false');
+      if (label) button.textContent = label;
+    }
+
+    /* ----------------------------------------------------
+       Comunicação com o Servidor (Apps Script)
+    ---------------------------------------------------- */
+    async function submitTaskRecord(payload) {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error('Falha HTTP ' + response.status);
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error || 'O servidor não confirmou a operação.');
+        return true;
+      } catch (error) {
+        console.error('Erro na requisição ao servidor.', error);
+        showToast(error.message || 'Erro de conexão. Tente novamente.', true, 3200);
+        return false;
+      }
+    }
+
+    async function loadTasks() {
+      statusElement.textContent = 'Carregando…';
+      try {
+        const response = await fetch(API_URL, { method: 'GET', cache: 'no-store' });
+        if (!response.ok) throw new Error('Falha HTTP ' + response.status);
+        const result = await response.json();
+        if (!result.success || !Array.isArray(result.data)) throw new Error(result.error || 'Resposta inválida do servidor.');
+        
+        taskData = result.data;
+        historyState.dirtyRows.clear();
+        renderCategories(taskData);
+        renderHistory();
+        statusElement.textContent = taskData.length ? taskData.length + ' registros' : 'Sem registros';
+      } catch (error) {
+        console.error('Erro ao carregar tarefas.', error);
+        statusElement.textContent = 'Erro ao carregar';
+        categoriesElement.innerHTML = '<div class="message error">Não foi possível carregar os dados. Confira a implantação do Apps Script e a conexão e tente novamente.</div><button type="button" class="button button-secondary" id="retry">Tentar novamente</button>';
+        document.getElementById('retry')?.addEventListener('click', loadTasks);
+        historyContentElement.innerHTML = '<div class="message error">Erro ao carregar o histórico.</div>';
+      }
+    }
+
+    /* ----------------------------------------------------
+       Ações de Cronômetro e Tarefas
+    ---------------------------------------------------- */
     function setTimerInputs(card, milliseconds) {
       const totalSeconds = Math.floor(milliseconds / 1000);
       const minutesInput = card.querySelector('[data-role="minutes"]');
@@ -402,58 +755,17 @@
       return (minutes * 60 + seconds) * 1000;
     }
 
-    async function submitTaskRecord(category, subcategory, items, minutes) {
-      if (!requireExecutor()) return false;
-
-      const payload = {
-        Carimbo: new Date().toISOString(),
-        'nome-executor': executorElement.value,
-        'nome-categoria': category,
-        'nome-subcategoria': subcategory,
-        'itens-necessarios': items,
-        'cronometro-minutos': minutes
-      };
-
-      try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload)
-        });
-        if (!response.ok) throw new Error('Falha HTTP ' + response.status);
-        const result = await response.json();
-        if (!result.success) throw new Error(result.error || 'O servidor não confirmou o salvamento.');
-        return true;
-      } catch (error) {
-        console.error('Erro ao salvar tarefa.', error);
-        showToast('Não foi possível salvar. Verifique a conexão e tente novamente.', true, 3200);
-        return false;
-      }
-    }
-
-    function lockSaveButton(button) {
-      if (!button) return;
-      button.disabled = true;
-      button.dataset.saving = 'true';
-      button.setAttribute('aria-busy', 'true');
-    }
-
-    function unlockSaveButton(button, label) {
-      if (!button) return;
-      button.disabled = false;
-      delete button.dataset.saving;
-      button.setAttribute('aria-busy', 'false');
-      button.textContent = label;
-    }
-
+    // Salvar card de tarefa existente (com suporte a título editado e appendRow)
     async function saveTask(card) {
       const saveButton = card.querySelector('[data-action="save"]');
       if (!saveButton || saveButton.dataset.saving === 'true') return;
       if (!requireExecutor()) return;
-      const subcategory = card.dataset.existingName || card.querySelector('[data-role="name"]').value.trim();
+
+      const titleInput = card.querySelector('[data-role="title-input"]');
+      const subcategory = titleInput ? titleInput.value.trim() : '';
       if (!subcategory) {
-        showToast('Informe o nome da nova tarefa.', true, 2500);
-        card.querySelector('[data-role="name"]').focus();
+        showToast('Informe o nome da tarefa.', true, 2500);
+        titleInput?.focus();
         return;
       }
 
@@ -469,7 +781,16 @@
       saveButton.textContent = 'Salvando…';
 
       try {
-        const ok = await submitTaskRecord(card.dataset.category, subcategory, card.querySelector('[data-role="items"]').value.trim(), durationMs / 60000);
+        const ok = await submitTaskRecord({
+          action: 'create',
+          Carimbo: new Date().toISOString(),
+          'nome-executor': executorElement.value,
+          'nome-categoria': card.dataset.category,
+          'nome-subcategoria': subcategory,
+          'itens-necessarios': card.querySelector('[data-role="items"]').value.trim(),
+          'cronometro-minutos': durationMs / 60000
+        });
+
         if (!ok) return;
         localStorage.removeItem(card.dataset.taskKey);
         showToast('Tarefa salva com sucesso.', false, 2200);
@@ -479,9 +800,51 @@
       }
     }
 
-    async function saveNewCategory(input) {
-      const button = input.closest('[data-role="new-category-panel"]').querySelector('[data-action="save-new-category"]');
+    // Salvar nova tarefa pelo formulário expansível
+    async function saveNewTask(panel) {
+      const button = panel.querySelector('[data-action="save-new-task"]');
       if (!button || button.dataset.saving === 'true') return;
+      if (!requireExecutor()) return;
+
+      const nameInput = panel.querySelector('[data-role="new-task-name"]');
+      const itemsInput = panel.querySelector('[data-role="new-task-items"]');
+      const subcategory = nameInput.value.trim();
+
+      if (!subcategory) {
+        showToast('Informe o nome da nova tarefa.', true, 2500);
+        nameInput.focus();
+        return;
+      }
+
+      lockSaveButton(button);
+      button.textContent = 'Salvando…';
+
+      try {
+        const ok = await submitTaskRecord({
+          action: 'create',
+          Carimbo: new Date().toISOString(),
+          'nome-executor': executorElement.value,
+          'nome-categoria': panel.dataset.category,
+          'nome-subcategoria': subcategory,
+          'itens-necessarios': itemsInput.value.trim(),
+          'cronometro-minutos': 0
+        });
+
+        if (!ok) return;
+        showToast('Nova tarefa criada com sucesso.', false, 2200);
+        await loadTasks();
+      } finally {
+        unlockSaveButton(button, 'Salvar');
+      }
+    }
+
+    // Salvar nova categoria
+    async function saveNewCategory(input) {
+      const panel = input.closest('[data-role="new-category-panel"]');
+      const button = panel.querySelector('[data-action="save-new-category"]');
+      if (!button || button.dataset.saving === 'true') return;
+      if (!requireExecutor()) return;
+
       const category = input.value.trim();
       if (!category) {
         showToast('Informe o nome da nova categoria.', true, 2500);
@@ -493,42 +856,103 @@
       button.textContent = 'Salvando…';
 
       try {
-        const ok = await submitTaskRecord(category, '', '', 0);
+        const ok = await submitTaskRecord({
+          action: 'create',
+          Carimbo: new Date().toISOString(),
+          'nome-executor': executorElement.value,
+          'nome-categoria': category,
+          'nome-subcategoria': '',
+          'itens-necessarios': '',
+          'cronometro-minutos': 0
+        });
+
         if (!ok) return;
         showToast('Categoria salva com sucesso.', false, 2200);
         input.value = '';
-        const panel = input.closest('[data-role="new-category-panel"]');
-        const trigger = panel.querySelector('[data-action="toggle-new-category"]');
-        const form = panel.querySelector('[data-role="new-category-form"]');
-        form.hidden = true;
-        trigger.setAttribute('aria-expanded', 'false');
+        panel.querySelector('[data-role="new-category-form"]').hidden = true;
+        panel.querySelector('[data-action="toggle-new-category"]').setAttribute('aria-expanded', 'false');
         await loadTasks();
       } finally {
         unlockSaveButton(button, 'Salvar');
       }
     }
 
-    async function loadTasks() {
-      statusElement.textContent = 'Carregando…';
+    /* ----------------------------------------------------
+       Ações da Tabela de Histórico (Edição Inline)
+    ---------------------------------------------------- */
+    async function saveHistoryRow(rowElement) {
+      const rowNumber = Number(rowElement.dataset.rowNumber);
+      const saveBtn = rowElement.querySelector('[data-action="save-history-row"]');
+      if (!saveBtn || saveBtn.dataset.saving === 'true') return;
+
+      const dirtyData = historyState.dirtyRows.get(rowNumber);
+      const originalRow = taskData.find(r => r.rowNumber === rowNumber);
+      if (!originalRow) return;
+
+      const currentValues = dirtyData ? dirtyData.fields : {
+        Carimbo: rowElement.querySelector('[data-field="Carimbo"]').value.trim(),
+        'nome-executor': rowElement.querySelector('[data-field="nome-executor"]').value.trim(),
+        'nome-categoria': rowElement.querySelector('[data-field="nome-categoria"]').value.trim(),
+        'nome-subcategoria': rowElement.querySelector('[data-field="nome-subcategoria"]').value.trim(),
+        'itens-necessarios': rowElement.querySelector('[data-field="itens-necessarios"]').value.trim(),
+        'cronometro-minutos-formatted': rowElement.querySelector('[data-field="cronometro-minutos-formatted"]').value.trim()
+      };
+
+      if (!currentValues['nome-executor'] || !currentValues['nome-categoria']) {
+        showToast('Executor e categoria são obrigatórios.', true, 2500);
+        return;
+      }
+
+      let decimalMinutes;
       try {
-        const response = await fetch(API_URL, { method: 'GET', cache: 'no-store' });
-        if (!response.ok) throw new Error('Falha HTTP ' + response.status);
-        const result = await response.json();
-        if (!result.success || !Array.isArray(result.data)) throw new Error(result.error || 'Resposta inválida do servidor.');
-        taskData = result.data;
-        renderCategories(taskData);
-        statusElement.textContent = taskData.length ? taskData.length + ' registros' : 'Sem registros';
-      } catch (error) {
-        console.error('Erro ao carregar tarefas.', error);
-        statusElement.textContent = 'Erro ao carregar';
-        categoriesElement.innerHTML = '<div class="message error">Não foi possível carregar o histórico. Confira a implantação do Apps Script e a conexão e tente novamente.</div><button type="button" class="button button-secondary" id="retry">Tentar novamente</button>';
-        document.getElementById('retry').addEventListener('click', loadTasks);
+        decimalMinutes = mmssToMinutesDecimal(currentValues['cronometro-minutos-formatted']);
+      } catch (err) {
+        showToast(err.message, true, 3000);
+        rowElement.querySelector('[data-field="cronometro-minutos-formatted"]').focus();
+        return;
+      }
+
+      lockSaveButton(saveBtn);
+      saveBtn.textContent = 'Salvando…';
+
+      try {
+        const payload = {
+          action: 'update',
+          rowNumber: rowNumber,
+          Carimbo: currentValues.Carimbo || originalRow.Carimbo,
+          'nome-executor': currentValues['nome-executor'],
+          'nome-categoria': currentValues['nome-categoria'],
+          'nome-subcategoria': currentValues['nome-subcategoria'],
+          'itens-necessarios': currentValues['itens-necessarios'],
+          'cronometro-minutos': decimalMinutes
+        };
+
+        const ok = await submitTaskRecord(payload);
+        if (!ok) return;
+
+        historyState.dirtyRows.delete(rowNumber);
+        showToast('Linha ' + rowNumber + ' atualizada com sucesso!', false, 2200);
+        await loadTasks();
+      } finally {
+        unlockSaveButton(saveBtn, 'Salvar');
       }
     }
 
+    function cancelHistoryRow(rowElement) {
+      const rowNumber = Number(rowElement.dataset.rowNumber);
+      historyState.dirtyRows.delete(rowNumber);
+      renderHistory();
+      showToast('Alterações descartadas.', false, 1500);
+    }
+
+    /* ----------------------------------------------------
+       Event Listeners Globais
+    ---------------------------------------------------- */
     categoriesElement.addEventListener('click', function (event) {
+      // Accordion Categoria
       const categoryToggle = event.target.closest('.category-toggle');
       if (categoryToggle) {
+        if (!confirmDiscardChanges()) return;
         const content = document.getElementById(categoryToggle.getAttribute('aria-controls'));
         const expanded = categoryToggle.getAttribute('aria-expanded') === 'true';
         categoryToggle.setAttribute('aria-expanded', String(!expanded));
@@ -536,51 +960,164 @@
         return;
       }
 
-      const toggleNewCategoryButton = event.target.closest('[data-action="toggle-new-category"]');
-      if (toggleNewCategoryButton) {
-        const panel = toggleNewCategoryButton.closest('[data-role="new-category-panel"]');
+      // Expansível Nova Categoria
+      const toggleNewCat = event.target.closest('[data-action="toggle-new-category"]');
+      if (toggleNewCat) {
+        const panel = toggleNewCat.closest('[data-role="new-category-panel"]');
         const form = panel.querySelector('[data-role="new-category-form"]');
         const willShow = form.hidden;
         form.hidden = !willShow;
-        toggleNewCategoryButton.setAttribute('aria-expanded', String(willShow));
-        if (willShow) {
-          panel.querySelector('[data-role="new-category-name"]').focus();
-        }
+        toggleNewCat.setAttribute('aria-expanded', String(willShow));
+        if (willShow) panel.querySelector('[data-role="new-category-name"]').focus();
         return;
       }
 
-      const closeNewCategoryButton = event.target.closest('[data-action="close-new-category"]');
-      if (closeNewCategoryButton) {
-        const panel = closeNewCategoryButton.closest('[data-role="new-category-panel"]');
-        const form = panel.querySelector('[data-role="new-category-form"]');
-        const trigger = panel.querySelector('[data-action="toggle-new-category"]');
-        form.hidden = true;
-        trigger.setAttribute('aria-expanded', 'false');
+      const closeNewCat = event.target.closest('[data-action="close-new-category"]');
+      if (closeNewCat) {
+        const panel = closeNewCat.closest('[data-role="new-category-panel"]');
+        panel.querySelector('[data-role="new-category-form"]').hidden = true;
+        panel.querySelector('[data-action="toggle-new-category"]').setAttribute('aria-expanded', 'false');
         return;
       }
 
-      const saveNewCategoryButton = event.target.closest('[data-action="save-new-category"]');
-      if (saveNewCategoryButton) {
-        const panel = saveNewCategoryButton.closest('[data-role="new-category-panel"]');
-        const input = panel.querySelector('[data-role="new-category-name"]');
-        saveNewCategory(input);
+      const saveNewCat = event.target.closest('[data-action="save-new-category"]');
+      if (saveNewCat) {
+        const panel = saveNewCat.closest('[data-role="new-category-panel"]');
+        saveNewCategory(panel.querySelector('[data-role="new-category-name"]'));
         return;
       }
 
+      // Expansível Nova Tarefa
+      const toggleNewTask = event.target.closest('[data-action="toggle-new-task"]');
+      if (toggleNewTask) {
+        const panel = toggleNewTask.closest('[data-role="new-task-panel"]');
+        const form = panel.querySelector('[data-role="new-task-form"]');
+        const willShow = form.hidden;
+        form.hidden = !willShow;
+        toggleNewTask.setAttribute('aria-expanded', String(willShow));
+        if (willShow) panel.querySelector('[data-role="new-task-name"]').focus();
+        return;
+      }
+
+      const closeNewTask = event.target.closest('[data-action="close-new-task"]');
+      if (closeNewTask) {
+        const panel = closeNewTask.closest('[data-role="new-task-panel"]');
+        panel.querySelector('[data-role="new-task-form"]').hidden = true;
+        panel.querySelector('[data-action="toggle-new-task"]').setAttribute('aria-expanded', 'false');
+        return;
+      }
+
+      const saveNewTaskBtn = event.target.closest('[data-action="save-new-task"]');
+      if (saveNewTaskBtn) {
+        saveNewTask(saveNewTaskBtn.closest('[data-role="new-task-panel"]'));
+        return;
+      }
+
+      // Controles do Card de Tarefa
       const actionButton = event.target.closest('[data-action]');
       if (!actionButton) return;
       const card = actionButton.closest('[data-task-key]');
+      if (!card) return;
+
       if (actionButton.dataset.action === 'timer') toggleTimer(card);
       if (actionButton.dataset.action === 'reset') resetTaskTimer(card);
       if (actionButton.dataset.action === 'save') saveTask(card);
     });
 
+    // Eventos do Histórico (Tabela, Paginação, Ordenação, Edição Inline)
+    historyContentElement.addEventListener('click', function (event) {
+      // Ordenação de Cabeçalho (3 estados: asc -> desc -> original)
+      const th = event.target.closest('th[data-sort]');
+      if (th) {
+        if (!confirmDiscardChanges()) return;
+        const col = th.dataset.sort;
+        if (historyState.sortCol !== col) {
+          historyState.sortCol = col;
+          historyState.sortDir = 'asc';
+        } else if (historyState.sortDir === 'asc') {
+          historyState.sortDir = 'desc';
+        } else if (historyState.sortDir === 'desc') {
+          historyState.sortDir = 'original';
+          historyState.sortCol = null;
+        } else {
+          historyState.sortDir = 'asc';
+        }
+        historyState.currentPage = 1;
+        renderHistory();
+        return;
+      }
+
+      // Paginação
+      const pageBtn = event.target.closest('.page-btn');
+      if (pageBtn && !pageBtn.disabled) {
+        if (!confirmDiscardChanges()) return;
+        const targetPage = Number(pageBtn.dataset.page);
+        if (targetPage && targetPage !== historyState.currentPage) {
+          historyState.currentPage = targetPage;
+          renderHistory();
+        }
+        return;
+      }
+
+      // Botão Salvar Linha
+      const saveRowBtn = event.target.closest('[data-action="save-history-row"]');
+      if (saveRowBtn) {
+        const row = saveRowBtn.closest('tr[data-row-number]');
+        saveHistoryRow(row);
+        return;
+      }
+
+      // Botão Cancelar Linha
+      const cancelRowBtn = event.target.closest('[data-action="cancel-history-row"]');
+      if (cancelRowBtn) {
+        const row = cancelRowBtn.closest('tr[data-row-number]');
+        cancelHistoryRow(row);
+        return;
+      }
+    });
+
+    // Monitora modificações nos inputs da tabela para marcar como dirty
+    historyContentElement.addEventListener('input', function (event) {
+      const input = event.target.closest('input[data-field]');
+      if (!input) return;
+
+      const row = input.closest('tr[data-row-number]');
+      const rowNumber = Number(row.dataset.rowNumber);
+      const originalRow = taskData.find(r => r.rowNumber === rowNumber);
+      if (!originalRow) return;
+
+      if (!historyState.dirtyRows.has(rowNumber)) {
+        historyState.dirtyRows.set(rowNumber, {
+          original: Object.assign({}, originalRow),
+          fields: {
+            Carimbo: originalRow.Carimbo,
+            'nome-executor': originalRow['nome-executor'],
+            'nome-categoria': originalRow['nome-categoria'],
+            'nome-subcategoria': originalRow['nome-subcategoria'],
+            'itens-necessarios': originalRow['itens-necessarios'],
+            'cronometro-minutos-formatted': minutesDecimalToMMSS(originalRow['cronometro-minutos'])
+          }
+        });
+      }
+
+      const dirtyEntry = historyState.dirtyRows.get(rowNumber);
+      dirtyEntry.fields[input.dataset.field] = input.value;
+
+      row.classList.add('dirty');
+      const saveBtn = row.querySelector('[data-action="save-history-row"]');
+      const cancelBtn = row.querySelector('[data-action="cancel-history-row"]');
+      if (saveBtn) saveBtn.disabled = false;
+      if (cancelBtn) cancelBtn.disabled = false;
+    });
+
+    // Loop do Cronômetro
     window.setInterval(function () {
       document.querySelectorAll('[data-task-key]').forEach(function (card) {
         if (readTimer(card.dataset.taskKey).startedAt) updateCardTime(card);
       });
     }, 500);
 
+    // Inicialização
     loadTasks();
   </script>
 </body>
